@@ -444,7 +444,7 @@ end)
 
 RegisterNetEvent('inventory:client:DropItemAnim', function()
     SendNUIMessage({
-        action = "",
+        action = "CloseInventory",
     })
     local dict = "amb_camp@world_camp_jack_throw_rocks_casual@male_a@idle_a"
     RequestAnimDict(dict)
