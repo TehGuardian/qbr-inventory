@@ -2,14 +2,14 @@ fx_version 'cerulean'
 game 'rdr3'
 rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aware my resources *will* become incompatible once RedM ships.'
 
-description 'QBR-Inventory'
+description 'qbr-Inventory'
 version '1.0.0'
 
 shared_scripts {
 	'@qbr-core/shared/locale.lua',
    	'locales/en.lua',	
 	'config.lua',
-	-- '@qbr-weapons/config.lua'
+	'@qbr-weapons/config.lua'
 }
 
 server_scripts {
@@ -27,11 +27,8 @@ files {
 	'html/ui.html',
 	'html/css/main.css',
 	'html/js/app.js',
-	'html/images/*.png',
-	'html/images/*.jpg',
-	'html/ammo_images/*.png',
-	'html/attachment_images/*.png',
-	'html/*.ttf'
+	'html/ammo_images/*.*',
+	'html/images/*.*',
+	'html/attachment_images/*.*',
+	'html/*.*'
 }
-
--- dependency 'qbr-weapons'

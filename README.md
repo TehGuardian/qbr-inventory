@@ -1,4 +1,33 @@
-# qbr-inventory
-Inventory for RedM QBCore
+# QBR Inventory edited by Polísek
 
-![RedM_b1436_GTAProcess_KdjcqhVGsw](https://user-images.githubusercontent.com/17935363/155883306-ab78e898-5740-407c-a878-e0402ca6d02c.jpg)
+- Fixed saving ammo + saving to db
+- Saves on every shot
+- You can only have 1 Molotov or Dynamite and it will be deleted from your inventory when discarded.
+- It is saved using the serial number. So if the player changes the position of the weapon in the inventory he still remembers it.
+- You don't need to edit qbr-weapons
+- If you throw away the item, the gun disappears from your hands.
+- When give weapon giving with ammo
+- Bow fixed - When you draw your bow it will check if you have arrows. If you do it will automatically reload when the bow is empty.
+
+- Just copy and paste client/ main.lua
+- Just copy and paste server / main.lua
+
+**If you need**
+- Displays 5 slot in line ( screen ) 
+
+
+
+**If you need**
+- Copy and paste html / css  /  main.css
+
+![image](https://user-images.githubusercontent.com/107623238/183285472-a53698ea-93f1-4ebb-8f72-e97685491a79.png)
+
+
+
+Original - QBR Inventory https://github.com/qbcore-redm-framework/qbr-inventory
+
+
+# Support
+- discord : https://discord.gg/VvRGG6rPCc
+- email :  polismanovicp@gmail.com
+- support: https://paypal.me/Polisek?country.x=CZ&locale.x=cs_CZ

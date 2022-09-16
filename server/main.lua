@@ -584,6 +584,8 @@ RegisterNetEvent('inventory:server:CraftAttachment', function(itemName, itemCost
 	end
 end)
 
+
+
 RegisterNetEvent('inventory:server:SetIsOpenState', function(IsOpen, type, id)
 	if not IsOpen then
 		if type == "stash" then
@@ -857,6 +859,31 @@ RegisterNetEvent('inventory:server:UseItemSlot', function(slot)
 		end
 	end
 end)
+
+
+RegisterNetEvent('inventory:server:SaveAmmo', function(svserie,ammo,ammoclip)
+	local src = source
+	local Player = exports['qbr-core']:GetPlayer(src)
+    local svslot = nil
+    local itemData
+    for v,k in pairs(Player.PlayerData.items) do
+	if k.type == "weapon" then
+        if ""..k.info.serie.."" == ""..svserie.."" then
+            print("Prosel")
+            print(k.info.serie)
+            svslot = k.slot
+            itemData = Player.Functions.GetItemBySlot(svslot)
+            itemData.info.ammo = ammo
+            itemData.info.ammoclip = ammoclip
+            Player.Functions.RemoveItem(itemData.name,itemData.amount, slot)
+            Player.Functions.AddItem(itemData.name,itemData.amount, slot, itemData.info)
+        end
+	end
+    end
+end)
+
+
+
 
 RegisterNetEvent('inventory:server:UseItem', function(inventory, item)
 	local src = source
@@ -1545,7 +1572,10 @@ exports['qbr-core']:AddCommand("randomitems", "Give Random Items (God Only)", {}
 	end
 end, "god")
 
+
+
 -- item
+
 
 exports['qbr-core']:CreateUseableItem("snowball", function(source, item)
 	local Player = exports['qbr-core']:GetPlayer(source)
