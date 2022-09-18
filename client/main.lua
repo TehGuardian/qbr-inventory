@@ -15,26 +15,6 @@ local isCrafting = false
 local isHotbar = false
 local itemInfos = {}
 local weaponsOut = {}
-local lasstusedweapon
-
-local haveGunInHands = false
-local UsedWeapons = {}
-local weaponItems = {}
-local WeaponsWithoutAmmo = {
-	["WEAPON_FISHINGROD"] = true,
-	["WEAPON_MELEE_KNIFE"] = true,
-	["WEAPON_MELEE_KNIFE_MINER"] = true,
-	["WEAPON_MELEE_KNIFE_VAMPIRE"] = true,
-	["WEAPON_LASSO"] = true,
-	["WEAPON_MELEE_CLEAVER"] = true,
-	["WEAPON_MELEE_LANTERN_ELECTRIC"] = true,
-	["WEAPON_MELEE_TORCH"] = true,
-	["WEAPON_MELEE_TORCH"] = true,
-}
-
-local playerLoad = false
-
-local lastusedweapon
 
 -- Functions
 
@@ -70,7 +50,7 @@ local function FormatWeaponAttachments(itemdata)
     if itemdata.info.attachments ~= nil and next(itemdata.info.attachments) ~= nil then
         for k, v in pairs(itemdata.info.attachments) do
             if WeaponAttachments[itemdata.name] ~= nil then
-                for key, value in pairs(WeaponAttachments[itemdata.name]) do 
+                for key, value in pairs(WeaponAttachments[itemdata.name]) do
                     if value.component == v.component then
                         attachments[#attachments+1] = {
                             attachment = key,
@@ -165,7 +145,7 @@ local function ItemsToItemInfo()
 		[1] = {costs = sharedItems["metalscrap"]["label"] .. ": 20x, " ..sharedItems["plastic"]["label"] .. ": 20x."},
 		[2] = {costs = sharedItems["coffeeseeds"]["label"] .. ": 20x, " ..sharedItems["water_bottle"]["label"] .. ": 20x."},
 	}
- 
+
 	local items = {}
 	for k, item in pairs(Config.CraftingItems) do
 		local itemInfo = sharedItems[item.name:lower()]
@@ -182,7 +162,7 @@ local function ItemsToItemInfo()
 			image = itemInfo["image"],
 			slot = item.slot,
 			costs = item.costs,
-			threshold = item.threshold, 
+			threshold = item.threshold,
 			points = item.points,
 		}
 	end
@@ -220,7 +200,9 @@ local function GetThresholdItems()
 	ItemsToItemInfo()
 	local items = {}
 	for k, item in pairs(Config.CraftingItems) do
-		items[k] = Config.CraftingItems[k]
+		if PlayerData.metadata["craftingrep"] >= Config.CraftingItems[k].threshold then
+			items[k] = Config.CraftingItems[k]
+		end
 	end
 	return items
 end
@@ -247,13 +229,11 @@ end
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     LocalPlayer.state:set("inv_busy", false, true)
     PlayerData = exports['qbr-core']:GetPlayerData()
-    playerLoad = true
 end)
 
 RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
     LocalPlayer.state:set("inv_busy", true, true)
     PlayerData = {}
-    playerLoad = false
 end)
 
 RegisterNetEvent('QBCore:Player:SetPlayerData', function(val)
@@ -403,144 +383,22 @@ RegisterNetEvent('inventory:client:CraftAttachment', function(itemName, itemCost
 	end)
 end)
 
-
 RegisterNetEvent("inventory:client:UseWeapon", function(weaponData, shootbool)
     local ply = PlayerPedId()
     local weaponName = tostring(weaponData.name)
-    local hash = GetHashKey(weaponData.name)
-    if not UsedWeapons[tonumber(hash)] then
-
-        UsedWeapons[tonumber(hash)] = {
-            name = weaponData.name,
-            WeaponHash = hash,
-            data = weaponData,
-            serie = weaponData.info.serie,
-        }
-        if weaponName == "weapon_thrown_dynamite" or weaponName == "weapon_thrown_molotov" or weaponName == "weapon_thrown_throwing_knives" or weaponName == "weapon_thrown_tomahawk" or weaponName == "weapon_thrown_tomahawk_ancient" or weaponName == "weapon_thrown_bolas" then
-            if weaponData.info.ammo == nil then
-                if weaponName == "weapon_thrown_throwing_knives" or weaponName == "weapon_thrown_tomahawk" or weaponName == "weapon_thrown_tomahawk_ancient" or weaponName == "weapon_thrown_bolas" then
-                    weaponData.info.ammo = 3
-                    weaponData.info.ammoclip = 0
-                else
-                    weaponData.info.ammo = 1
-                    weaponData.info.ammoclip = 0
-                end
-            end
-            Citizen.InvokeNative(0x5E3BDDBCB83F3D84, ply, hash, 0, false, true)
-        elseif weaponName == 'weapon_bow' or weaponName == 'weapon_bow_improved' then
-
-            if weaponData.info.ammo == nil then
-                if haveArrows() then
-                    weaponData.info.ammo = 14
-                    weaponData.info.ammoclip = 14
-                    TriggerServerEvent('QBCore:Server:RemoveItem', "ammo_arrow",1)
-                else
-                    weaponData.info.ammo = 0
-                    weaponData.info.ammoclip = 0
-                end
-            elseif weaponData.info.ammo == 0 then
-                if haveArrows() then
-                    weaponData.info.ammo = 14
-                    weaponData.info.ammoclip = 14
-                    TriggerServerEvent('QBCore:Server:RemoveItem', "ammo_arrow",1)
-                else
-                    weaponData.info.ammo = 0
-                    weaponData.info.ammoclip = 0
-                end
-            end
-            Citizen.InvokeNative(0x5E3BDDBCB83F3D84, ply, hash, 0, false, true)
-
+    local weaponHash = GetHashKey(weaponData.name)
+    Citizen.InvokeNative(0xB282DC6EBD803C75, ply, weaponHash, 500, true, 0)
+    if (weaponsOut[weapon]) then
+        if (weaponsOut[weapon].equipped) then
+            SetCurrentPedWeapon(PlayerPedId(), weapon, true, weaponData.attachPoint, false, false)
+            SetCurrentPedWeapon(PlayerPedId(), 0xA2719263, true, 0, false, false)
+            weaponsOut[weapon].equipped = false
         else
-            if weaponData.info.ammo == nil then
-                weaponData.info.ammo = 0
-                weaponData.info.ammoclip = 0
-            end
-            Citizen.InvokeNative(0x5E3BDDBCB83F3D84, ply, hash, 0, false, true)
+            SetCurrentPedWeapon(PlayerPedId(), weapon, true, 0, false, false)
+            weaponsOut[weapon].equipped = true
         end
-
-        if weaponName == 'weapon_bow' or weaponName == 'weapon_bow_improved' or weaponName == "weapon_thrown_dynamite" or weaponName == "weapon_thrown_molotov" or weaponName == "weapon_thrown_throwing_knives" or weaponName == "weapon_thrown_tomahawk" or weaponName == "weapon_thrown_tomahawk_ancient" or weaponName == "weapon_thrown_bolas" then
-            SetPedAmmo(ply, hash ,weaponData.info.ammo)
-        else
-            SetPedAmmo(ply, hash ,weaponData.info.ammo - weaponData.info.ammoclip)
-            SetAmmoInClip(ply, hash ,weaponData.info.ammoclip)
-        end
-        SetCurrentPedWeapon(ply,hash,true)
-    else
-        local ammo = GetAmmoInPedWeapon(PlayerPedId(), hash)
-        local ammobool, ammoclip = GetAmmoInClip(PlayerPedId(),hash)
-        TriggerServerEvent('inventory:server:SaveAmmo',weaponData.info.serie,ammo,ammoclip) 
-        RemoveWeaponFromPed(ply,hash)
-        UsedWeapons[tonumber(hash)] = nil
-    end
-
-
-end)
-
-
-Citizen.CreateThread(function()
-    while true do
-        Wait(500)
-        --if playerLoad == true then
-            if next(UsedWeapons) ~= nil then
-                weaponItems = {}
-                for k,v in pairs(PlayerData.items) do 
-                    if v.type == "weapon" then
-                        weaponItems[v.info.serie] = v
-                    end
-                end 
-
-                for i,k in pairs(UsedWeapons) do
-                    if k ~= nil then
-                        if weaponItems[k.serie] then 
-                            local ammo = GetAmmoInPedWeapon(PlayerPedId(), k.WeaponHash)
-                            if k.data.info.ammo ~= ammo then
-                                local ammobool, ammoclip = GetAmmoInClip(PlayerPedId(), k.WeaponHash)
-                                k.data.info.ammo = ammo
-                                k.data.info.ammoclip = ammoclip
-                                TriggerServerEvent('inventory:server:SaveAmmo',k.serie,ammo,ammoclip) 
-                            end
-
-                            if k.name == "weapon_thrown_dynamite" or k.name == "weapon_thrown_molotov" then
-                                if ammo == 0 then
-                                    TriggerServerEvent('QBCore:Server:RemoveItem', k.name,1)
-                                    UsedWeapons[tonumber(k.WeaponHash)] = nil
-                                end
-                            end
-                        else
-                            local ply = PlayerPedId()
-                            UsedWeapons[tonumber(k.WeaponHash)] = nil
-                            RemoveWeaponFromPed(ply,k.WeaponHash)
-                        end
-                    end
-                end 
-            end
-        --end
     end
 end)
-
-function dump(o)
-    if type(o) == 'table' then
-       local s = '{ '
-       for k,v in pairs(o) do
-          if type(k) ~= 'number' then k = '"'..k..'"' end
-          s = s .. '['..k..'] = ' .. dump(v) .. ','
-       end
-       return s .. '} '
-    else
-       return tostring(o)
-    end
- end
-
-
-function haveArrows()
-    local haveArrow = false
-    for k,v in pairs(PlayerData.items) do 
-        if v.name == "ammo_arrow" then
-            haveArrow = true
-        end
-    end 
-    return haveArrow
- end
 
 RegisterNetEvent('inventory:client:CheckWeapon', function(weaponName)
     local ped = PlayerPedId()
@@ -750,7 +608,7 @@ end, false)
 CreateThread(function()
     while true do
         Wait(0)
-        if IsControlJustReleased(0, 0xC1989F95) and IsInputDisabled(0) then -- key open inventory I
+        if IsControlJustReleased(0, 0xC1989F95) and IsInputDisabled(0) then -- key open inventory Tab
             if not isCrafting then
 				if not PlayerData.metadata["isdead"] and not PlayerData.metadata["inlaststand"] and not PlayerData.metadata["ishandcuffed"] and not IsPauseMenuActive() then
 					local ped = PlayerPedId()
@@ -1123,70 +981,83 @@ CreateThread(function()
     end
 end)
 
+
+-- CreateThread(function()
+--     while true do
+--         local sleep = 1000
+--         if LocalPlayer.state['isLoggedIn'] then
+--             local pos = GetEntityCoords(PlayerPedId())
+--             local craftObject = GetClosestObjectOfType(pos, 2.0, -1718655749 , false, false, false)
+--             if craftObject ~= 0 then
+--                 local objectPos = GetEntityCoords(craftObject)
+--                 if #(pos - objectPos) < 1.5 then
+--                     sleep = 0
+--                     DrawText3Ds(objectPos.x, objectPos.y, objectPos.z + 1.0, "~d~E~s~ - "..Lang:t("info.craft"))
+--                     if IsControlJustReleased(0, 0xCEFD9220) then
+--                         local crafting = {}
+--                         crafting.label = Lang:t("info.craft_label")
+--                         crafting.items = GetThresholdItems()
+--                         TriggerServerEvent("inventory:server:OpenInventory", "crafting", math.random(1, 99), crafting)
+--                         sleep = 100
+--                     end
+--                 end
+--             end
+--         end
+--         Wait(sleep)
+--     end
+-- end)
+
+
+    -- CreateThread(function()
+    --     while true do
+    --         local sleep = 1000
+    --         if LocalPlayer.state['isLoggedIn'] then
+    --             local pos = GetEntityCoords(PlayerPedId())
+    --             local craftObject = GetClosestObjectOfType(pos, 2.0, -1718655749 , false, false, false)
+    --             if craftObject ~= 0 then
+    --                 local objectPos = GetEntityCoords(craftObject)
+    --                 if #(pos - objectPos) < 1.5 then
+    --                     sleep = 0
+    --                     DrawText3Ds(objectPos.x, objectPos.y, objectPos.z + 1.0, "~d~E~s~ - "..Lang:t("info.craft"))
+    --                     if IsControlJustReleased(0, 0xCEFD9220) then
+    --                         local crafting = {}
+    --                         crafting.label = Lang:t("info.craft_label")
+    --                         crafting.items = GetThresholdItems()
+    --                         TriggerServerEvent("inventory:server:OpenInventory", "crafting", math.random(1, 99), crafting)
+    --                         sleep = 100
+    --                     end
+    --                 end
+    --             end
+    --         end
+    --         Wait(sleep)
+    --     end
+    -- end)
+
+
+--to add multiple locations you need to copy-paste these lines and and a number at the end of CraftingItemsLocation example CraftingItemsLocation2-3-4-5 ect 
 CreateThread(function()
     while true do
-        local sleep = 1000
-        if LocalPlayer.state['isLoggedIn'] then
-            local pos = GetEntityCoords(PlayerPedId())
-            local craftObject = GetClosestObjectOfType(pos, 2.0, -1718655749 , false, false, false)
-            if craftObject ~= 0 then
-                local objectPos = GetEntityCoords(craftObject)
-                if #(pos - objectPos) < 1.5 then
-                    sleep = 0
-                    DrawText3Ds(objectPos.x, objectPos.y, objectPos.z + 1.0, "~d~E~s~ - "..Lang:t("info.craft"))
-                    if IsControlJustReleased(0, 0xCEFD9220) then
-                        local crafting = {}
-                        crafting.label = Lang:t("info.craft_label")
-                        crafting.items = GetThresholdItems()
-                        TriggerServerEvent("inventory:server:OpenInventory", "crafting", math.random(1, 99), crafting)
-                        sleep = 100
-                    end
+        local pos = GetEntityCoords(PlayerPedId())
+        local inRange = false
+        local distance = #(pos - vector3(Config.CraftingItemsLocation))
+
+        if distance < 10 then
+            inRange = true
+            if distance < 1.5 then
+                DrawText3Ds(Config.CraftingItemsLocation.x, Config.CraftingItemsLocation.y, Config.CraftingItemsLocation.z, "~g~E~w~ - Craft")
+                if IsControlJustPressed(0, 0xCEFD9220) then
+                    local crafting = {}
+                    crafting.label = "Crafting"
+                    crafting.items = GetThresholdItems()
+                    TriggerServerEvent("inventory:server:OpenInventory", "crafting", math.random(1, 99), crafting)
                 end
             end
         end
-        Wait(sleep)
+
+        if not inRange then
+            Wait(1000)
+        end
+
+        Wait(3)
     end
 end)
-
-CreateThread(function()
-	while true do
-		local pos = GetEntityCoords(PlayerPedId())
-		local inRange = false
-		local distance = #(pos - vector3(Config.AttachmentCraftingLocation.x, Config.AttachmentCraftingLocation.y, Config.AttachmentCraftingLocation.z))
-
-		if distance < 10 then
-			inRange = true
-			if distance < 1.5 then
-				DrawText3Ds(Config.AttachmentCraftingLocation.x, Config.AttachmentCraftingLocation.y, Config.AttachmentCraftingLocation.z, "~d~E~s~ - "..Lang:t("info.craft"))
-				if IsControlJustPressed(0, 0xCEFD9220) then
-					local crafting = {}
-					crafting.label = Lang:t("info.attatch_label")
-					crafting.items = GetAttachmentThresholdItems()
-					TriggerServerEvent("inventory:server:OpenInventory", "attachment_crafting", math.random(1, 99), crafting)
-				end
-			end
-		end
-
-		if not inRange then
-			Wait(1000)
-		end
-
-		Wait(3)
-	end
-end)
-
-
-RegisterCommand('craft', function()
-    TriggerEvent("pls:craftingmenu")
-end, false)
-
-CreateThread(function()
-	while true do
-        if IsControlJustPressed(0, 0xF1301666) then
-            TriggerEvent("pls:craftingmenu")
-            --TriggerServerEvent("inventory:server:OpenInventory", "attachment_crafting", math.random(1, 99), crafting)
-        end
-		Wait(1000)
-	end
-end)
-

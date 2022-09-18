@@ -60,6 +60,7 @@ Config.CraftingItems = {
     },
 }
 
+Config.CraftingItemsLocation = vector3(2953.12, 1314.97, 44.82)
 Config.AttachmentCraftingLocation = vector3(-277.2096, 779.3605, 119.504)
 
 Config.AttachmentCrafting = {
